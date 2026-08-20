@@ -1,0 +1,64 @@
+-- ====================================================================
+-- ESQUEMA DE TABLA PARA SUPABASE — HCE Triage Psiquiátrico
+-- ====================================================================
+-- Ejecuta este script una sola vez en Supabase:
+-- Dashboard -> SQL Editor -> New query -> pega esto -> Run
+-- ====================================================================
+
+create table if not exists public.pacientes (
+    id                  bigserial primary key,
+    prioridad           integer not null,
+    id_nombre           text not null,
+    cie                 text not null,
+    nivel_riesgo        text not null,
+    edad                integer not null,
+    sexo                text not null,
+    ocupacion           text,
+    red_apoyo           text,
+    diagnostico_formal  text,
+    justificacion       text,
+    anamnesis           text,
+    estado_mental       text,
+    plan_tratamiento    text,
+    creado_en           timestamptz not null default now()
+);
+
+-- Índice para que ordenar por prioridad sea rápido
+create index if not exists idx_pacientes_prioridad on public.pacientes (prioridad);
+
+-- --------------------------------------------------------------
+-- SEGURIDAD (RLS): habilitada por defecto en Supabase.
+-- Esta app usa la "anon key" desde el navegador del usuario final
+-- (a través de Streamlit Cloud), así que necesitas una política que
+-- permita leer/escribir. Para un prototipo de demostración con datos
+-- ficticios, una política abierta es aceptable:
+-- --------------------------------------------------------------
+alter table public.pacientes enable row level security;
+
+create policy "Permitir todo (prototipo)" on public.pacientes
+    for all
+    using (true)
+    with check (true);
+
+-- ⚠️ Esta política abierta permite leer y escribir a cualquiera que
+-- tenga la URL y la anon key del proyecto (que es pública si la app
+-- corre en el navegador). Es aceptable para un prototipo con datos
+-- ficticios y el candado de PIN ya presente en la app. NO la uses
+-- así con datos clínicos reales: en ese caso necesitarías autenticación
+-- de usuarios real (Supabase Auth) y políticas RLS por usuario/rol.
+
+-- --------------------------------------------------------------
+-- (Opcional) Cargar los 20 pacientes de ejemplo directamente en la
+-- base de datos, en vez de que la app los use solo como respaldo local.
+-- Descomenta y adapta si quieres que la tabla arranque poblada:
+-- --------------------------------------------------------------
+-- insert into public.pacientes
+--   (prioridad, id_nombre, cie, nivel_riesgo, edad, sexo, ocupacion,
+--    red_apoyo, diagnostico_formal, justificacion, anamnesis,
+--    estado_mental, plan_tratamiento)
+-- values
+--   (1, 'PAC-001 · J. Álvarez', 'F32.3', 'Urgente', 34, 'Masculino',
+--    'Desempleado (hace 6 meses)', 'Aislamiento social casi total...',
+--    'Episodio depresivo grave con síntomas psicóticos (CIE-10 F32.3)',
+--    '...', '...', '...', '...');
+-- (repite una fila por cada uno de los 20 pacientes)
